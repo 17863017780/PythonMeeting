@@ -4,10 +4,16 @@ import time
 import sscLogin
 import config
 import api
+# import win32api, win32gui
 
 # 调用登录
-
 sscLogin.login()
+
+
+# ct = win32api.GetConsoleTitle()
+# hd = win32gui.FindWindow(0,ct)
+# win32gui.ShowWindow(hd,0)
+
 # cookie 可更新
 # print(" 更新后的 cookie is：" + config.COOKIE)
 
@@ -72,7 +78,6 @@ def confirm_meeting(meetingOrderCode):
     return True
 
 
-
 if __name__ == '__main__':
     #  该逻辑为预定逻辑
     #  9：00 将执行
@@ -85,7 +90,7 @@ if __name__ == '__main__':
                 print('开始预约：1')
                 for item in today_book_list:
                     book_meeting(item)
-                #这里加一步，去根据预约信息，发送短信
+                # 这里加一步，去根据预约信息，发送短信
                 appoint_meeting()
                 break
             else:
@@ -95,50 +100,32 @@ if __name__ == '__main__':
         today_confirm_list = appoint_meeting_today()
 
         while RUN_STATUS:
+            if (today_confirm_list.__len__() == 0 | today_confirm_list.__len__() < 1 ):
+                break;
             #  该逻辑为确认逻辑
             #  到达确认时间需要执行
             now = time.localtime()
             cur_time_number = int(time.strftime('%H%M', now))  # 符合平台规范的特殊时间数字  1001 代表10:01
-            time.sleep(5)
             for item in today_confirm_list:
                 # print(item['meetingOrderCode'])
                 # print(item['meetingEstimateStime'])
                 status = (item['meetingOrderCode'] not in already_confirm_list) and (
                     api.judge_whether_appointment(cur_time_number, item['meetingEstimateStime'])
                 )
-
+                print("开始确认and Status:"+ str(status))
                 if status:
                     print('执行确认', cur_time_number, status)
                     confirm_meeting(item['meetingOrderCode'])
+            time.sleep(300)
             if cur_time_number > 1800:
                 # 每天六点后 关闭程序
                 break
+
+
+
 
 
 def book_meeting2(startTime, endTime):
     print("还没调用接口")
     api.book_meeting(today_book_date.isoformat(), startTime, endTime,"小组会议")
 
-
-def a():
-    #  该逻辑为预定逻辑
-    #  9：00 将执行
-    #  周六日 不执行
-    if tm_wday < 5:
-        while RUN_STATUS:
-            now = time.localtime()
-            cur_time_number = int(time.strftime('%H%M', now))
-            print("当前时间为："+ str(cur_time_number))
-            if cur_time_number >= 900:
-                print('开始预约：1')
-                try:
-                    _thread.start_new_thread(book_meeting2,("1900","1930",))
-                    _thread.start_new_thread(book_meeting2,("1930", "2000",))
-                except:
-                    print("Error: 无法启动线程")
-                time.sleep(5)
-                break
-            else:
-                print(str(cur_time_number) + ',还未到上午9点')
-            time.sleep(1)
-    print("执行完毕，应该会发送两条消息")

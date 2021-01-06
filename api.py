@@ -1,7 +1,8 @@
 #调用接口的方法诶
+import datetime
 import json
 import requests
-from datetime import datetime
+import time
 from urllib import request
 import config
 
@@ -11,7 +12,7 @@ def book_meeting(meetingEstimateDate, meetingEstimateStime, meetingEstimateEtime
     print("调用预约会议室接口")
     url = 'http://jmrs.jd.com/meetingOrder/create'
     post_data = {
-        'meetingName': "长城",
+        'meetingName': "水立方",
         'meetingCode': "2001006986",
         'workplaceCode': "1001000054",
         'districtCode': "13",
@@ -39,9 +40,12 @@ def book_meeting(meetingEstimateDate, meetingEstimateStime, meetingEstimateEtime
 def book_meeting3(meetingEstimateDate, meetingEstimateStime, meetingEstimateEtime, meetingSubject):
     print("调用预约会议室接口")
     url = 'http://jmrs.jd.com/meetingOrder/create'
+    # if(str(meetingEstimateEtime)){
+    #     meetingEstimateEtime
+    # }
     post_data = {
-        'meetingName': "什刹海",
-        'meetingCode': "2001001776",
+        'meetingName': "水立方",
+        'meetingCode': "2001001778",
         'workplaceCode': "1001000054",
         'districtCode': "13",
         'meetingEstimateDate': meetingEstimateDate,
@@ -67,7 +71,7 @@ def my_book_list():
         "lang": "zh"
     }
     data = post_api(url, post_data)
-    # print("需确认的会议室"+str(data))
+    print("需确认的会议室"+str(data))
     return data
 
 
@@ -77,9 +81,9 @@ def post_api(url, data):
     headers = {
         'Accept': 'application/json',
         'Content-Type': 'application/json;charset=UTF-8',
-        'cookie': cookie_string,
+        'cookie': cookie_string ,
+        'Referer': 'http://jmrs.jd.com/saas/sso'
     }
-
     res = requests.post(
         url=url,
         json=data,
@@ -119,6 +123,7 @@ def wx_remind(content):
         ],
         "uids": [
             "UID_hapkex44c5jlMzaS3rPexngYhD3z",
+			"UID_10gjpt960uQLBYnJz87ZwztojsAT"
         ]
     }
     data = post_api_without_cookie(url, post_data)
@@ -129,7 +134,7 @@ def wx_remind(content):
 # 只是把数据合起来
 def book_success_remind(date, start, end, message):
     # print("准备发送微信消息")
-    wx_remind('预约 ' + str(date) + ', ' + str(start) + '至' + str(end) + '  ' + message)
+    wx_remind('预约什刹海会议室' + str(date) + ', ' + str(start) + '至' + str(end) + '  ' + message)
 
 
 
@@ -151,8 +156,7 @@ def judge_whether_appointment(time_now, time_num):
         # minute == 0
         # 减去一小时 再加上31分钟
         the_appoint_time = hour - 100 + 30
-    print('下一个确认时间：' + str(the_appoint_time))
-
+    return time_now > the_appoint_time
 
 # 确认会议室后发送消息
 def confirm_success_remind(date, message):
@@ -173,3 +177,10 @@ def confirm_meeting(meetingOrderCode):
     else:
         confirm_success_remind(str(datetime.date.today()), '成功')
     return data
+
+
+if __name__ == '__main__':
+    now = time.localtime()
+    cur_time_number = int(time.strftime('%H%M', now))  # 符合平台规范的特殊时间数字  1001 代表10:01
+    print(cur_time_number)
+    print('结果是：'+ str(judge_whether_appointment(cur_time_number,1430) ))
